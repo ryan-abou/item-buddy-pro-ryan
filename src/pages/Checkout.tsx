@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useStudent } from "@/contexts/StudentContext";
 import StudentIdEntry from "@/components/StudentIdEntry";
 import { getAvailableItems, getItemCategories, checkoutItem } from "@/lib/supabase-helpers";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -75,7 +76,8 @@ export default function Checkout() {
       await checkoutItem(student.id, selectedItem.id, days, reason.trim(), teacher.trim() || undefined);
       toast.success("Item checked out successfully!");
       closeCheckoutForm();
-      loadItems();
+      clear();
+      navigate("/");
     } catch (e: any) {
       toast.error(e.message || "Checkout failed");
     } finally {
@@ -113,18 +115,12 @@ export default function Checkout() {
           </p>
         </div>
 
-        {/* Checkout form overlay */}
-        {selectedItem && (
-          <div className="mb-6 rounded-xl border-2 border-primary bg-card p-5 shadow-lg animate-fade-in">
-            <div className="mb-4 flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-semibold text-foreground">{selectedItem.name}</h2>
-                <span className="font-mono text-xs text-muted-foreground">#{selectedItem.asset_tag}</span>
-              </div>
-              <button onClick={closeCheckoutForm} className="rounded-full p-1 hover:bg-muted touch-target">
-                <X className="h-5 w-5 text-muted-foreground" />
-              </button>
-            </div>
+        <Dialog open={!!selectedItem} onOpenChange={(open) => { if (!open) closeCheckoutForm(); }}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>{selectedItem?.name}</DialogTitle>
+              <span className="font-mono text-xs text-muted-foreground">#{selectedItem?.asset_tag}</span>
+            </DialogHeader>
 
             <div className="grid gap-4">
               <div>
@@ -167,10 +163,10 @@ export default function Checkout() {
 
               <Button
                 onClick={handleCheckout}
-                disabled={checkingOut === selectedItem.id}
+                disabled={checkingOut === selectedItem?.id}
                 className="h-12 text-base touch-target"
               >
-                {checkingOut === selectedItem.id ? (
+                {checkingOut === selectedItem?.id ? (
                   <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
                   <>
@@ -180,8 +176,8 @@ export default function Checkout() {
                 )}
               </Button>
             </div>
-          </div>
-        )}
+          </DialogContent>
+        </Dialog>
 
         <div className="mb-4 flex flex-col gap-3 sm:flex-row">
           <div className="relative flex-1">
