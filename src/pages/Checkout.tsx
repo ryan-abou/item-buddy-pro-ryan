@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Search, Loader2, CheckCircle2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ArrowLeft, Search, Loader2, CheckCircle2, ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Checkout() {
@@ -21,10 +22,13 @@ export default function Checkout() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
-  const [checkingOut, setCheckingOut] = useState<string | null>(null);
+  const [checkingOut, setCheckingOut] = useState(false);
+
+  // Multi-select state
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [showForm, setShowForm] = useState(false);
 
   // Checkout form state
-  const [selectedItem, setSelectedItem] = useState<any | null>(null);
   const [duration, setDuration] = useState("");
   const [reason, setReason] = useState("");
   const [teacher, setTeacher] = useState("");
@@ -53,24 +57,38 @@ export default function Checkout() {
     }
   };
 
-  const openCheckoutForm = (item: any) => {
+  const toggleItem = (itemId: string) => {
+    setSelectedItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(itemId)) {
+        next.delete(itemId);
+      } else {
+        next.add(itemId);
+      }
+      return next;
+    });
+  };
+
+  const openCheckoutForm = () => {
     detachInput();
-    setSelectedItem(item);
-    setDuration(String(item.default_loan_duration));
+    // Use the first selected item's default duration as a starting point
+    const firstSelected = items.find((i) => selectedItems.has(i.id));
+    setDuration(String(firstSelected?.default_loan_duration ?? 1));
     setReason("");
     setTeacher("");
+    setShowForm(true);
   };
 
   const closeCheckoutForm = () => {
     detachInput();
-    setSelectedItem(null);
+    setShowForm(false);
     setDuration("");
     setReason("");
     setTeacher("");
   };
 
   const handleCheckout = async () => {
-    if (!student || !selectedItem) return;
+    if (!student || selectedItems.size === 0) return;
     detachInput();
     const days = parseInt(duration, 10);
     if (!days || days < 1) {
@@ -81,17 +99,20 @@ export default function Checkout() {
       toast.error("Please provide a reason");
       return;
     }
-    setCheckingOut(selectedItem.id);
+    setCheckingOut(true);
     try {
-      await checkoutItem(student.id, selectedItem.id, days, reason.trim(), teacher.trim() || undefined);
-      toast.success("Item checked out successfully!");
+      const itemIds = Array.from(selectedItems);
+      for (const itemId of itemIds) {
+        await checkoutItem(student.id, itemId, days, reason.trim(), teacher.trim() || undefined);
+      }
+      toast.success(`${itemIds.length} item${itemIds.length > 1 ? "s" : ""} checked out successfully!`);
       closeCheckoutForm();
       clear();
       navigate("/");
     } catch (e: any) {
       toast.error(e.message || "Checkout failed");
     } finally {
-      setCheckingOut(null);
+      setCheckingOut(false);
     }
   };
 
@@ -111,6 +132,8 @@ export default function Checkout() {
       item.asset_tag.toLowerCase().includes(search.toLowerCase())
   );
 
+  const selectedItemDetails = items.filter((i) => selectedItems.has(i.id));
+
   return (
     <div className="min-h-screen bg-background p-6 pb-72">
       <div className="mx-auto max-w-3xl animate-fade-in">
@@ -126,17 +149,26 @@ export default function Checkout() {
           </p>
         </div>
 
-        <Dialog open={!!selectedItem} onOpenChange={(open) => { if (!open) closeCheckoutForm(); }}>
+        {/* Checkout details dialog */}
+        <Dialog open={showForm} onOpenChange={(open) => { if (!open) closeCheckoutForm(); }}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>{selectedItem?.name}</DialogTitle>
-              <span className="font-mono text-xs text-muted-foreground">#{selectedItem?.asset_tag}</span>
+              <DialogTitle>Check Out {selectedItems.size} Item{selectedItems.size > 1 ? "s" : ""}</DialogTitle>
             </DialogHeader>
+
+            {/* Selected items summary */}
+            <div className="flex flex-wrap gap-2">
+              {selectedItemDetails.map((item) => (
+                <Badge key={item.id} variant="secondary" className="text-xs">
+                  {item.name} <span className="ml-1 font-mono text-muted-foreground">#{item.asset_tag}</span>
+                </Badge>
+              ))}
+            </div>
 
             <div className="grid gap-4">
               <div>
                 <label className="mb-1 block text-sm font-medium text-foreground">
-                  How many days do you need it? <span className="text-destructive">*</span>
+                  How many days do you need them? <span className="text-destructive">*</span>
                 </label>
                 <Input
                   ref={durationRef}
@@ -153,7 +185,7 @@ export default function Checkout() {
 
               <div>
                 <label className="mb-1 block text-sm font-medium text-foreground">
-                  Why do you need it? <span className="text-destructive">*</span>
+                  Why do you need them? <span className="text-destructive">*</span>
                 </label>
                 <Textarea
                   ref={reasonRef}
@@ -184,15 +216,15 @@ export default function Checkout() {
 
               <Button
                 onClick={handleCheckout}
-                disabled={checkingOut === selectedItem?.id}
+                disabled={checkingOut}
                 className="h-12 text-base touch-target"
               >
-                {checkingOut === selectedItem?.id ? (
+                {checkingOut ? (
                   <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
                   <>
                     <CheckCircle2 className="mr-2 h-5 w-5" />
-                    Confirm Check Out
+                    Confirm Check Out ({selectedItems.size})
                   </>
                 )}
               </Button>
@@ -238,35 +270,61 @@ export default function Checkout() {
           </div>
         ) : (
           <div className="grid gap-3">
-            {filtered.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center justify-between rounded-xl border bg-card p-4 shadow-sm transition-shadow hover:shadow-md"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-foreground">{item.name}</span>
-                    <span className="font-mono text-xs text-muted-foreground">#{item.asset_tag}</span>
-                  </div>
-                  <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-                    <span>{item.category}</span>
-                    {item.location && <span>• {item.location}</span>}
-                    <span>• {item.default_loan_duration}d default</span>
+            {filtered.map((item) => {
+              const isSelected = selectedItems.has(item.id);
+              return (
+                <div
+                  key={item.id}
+                  onClick={() => toggleItem(item.id)}
+                  className={`flex cursor-pointer items-center gap-4 rounded-xl border p-4 shadow-sm transition-all ${
+                    isSelected
+                      ? "border-primary bg-primary/5 shadow-md"
+                      : "bg-card hover:shadow-md"
+                  }`}
+                >
+                  <Checkbox
+                    checked={isSelected}
+                    onCheckedChange={() => toggleItem(item.id)}
+                    className="h-6 w-6"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-foreground">{item.name}</span>
+                      <span className="font-mono text-xs text-muted-foreground">#{item.asset_tag}</span>
+                    </div>
+                    <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+                      <span>{item.category}</span>
+                      {item.location && <span>• {item.location}</span>}
+                      <span>• {item.default_loan_duration}d default</span>
+                    </div>
                   </div>
                 </div>
-                <Button
-                  onClick={() => openCheckoutForm(item)}
-                  disabled={selectedItem?.id === item.id}
-                  className="touch-target"
-                >
-                  <CheckCircle2 className="mr-1 h-4 w-4" />
-                  Check Out
-                </Button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
+
+      {/* Floating checkout bar */}
+      {selectedItems.size > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background p-4 shadow-lg">
+          <div className="mx-auto flex max-w-3xl items-center justify-between">
+            <div className="flex items-center gap-2 text-foreground">
+              <ShoppingCart className="h-5 w-5" />
+              <span className="font-semibold">{selectedItems.size} item{selectedItems.size > 1 ? "s" : ""} selected</span>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setSelectedItems(new Set())} className="touch-target">
+                Clear
+              </Button>
+              <Button onClick={openCheckoutForm} className="touch-target">
+                <CheckCircle2 className="mr-1 h-4 w-4" />
+                Continue
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
