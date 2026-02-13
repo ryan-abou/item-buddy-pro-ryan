@@ -19,6 +19,7 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
   const [showRegister, setShowRegister] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
   const { identify } = useStudent();
   const navigate = useNavigate();
 
@@ -59,6 +60,7 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
         student_id: studentId.trim(),
         first_name: firstName.trim(),
         last_name: lastName.trim(),
+        email: email.trim() || null,
       });
       if (error) {
         toast.error(error.message);
@@ -134,7 +136,17 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
               <Input
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
+                className="mt-1 h-12 text-lg"
+              />
+            </div>
+            <div>
+              <Label>Email <span className="text-muted-foreground text-xs font-normal">(optional)</span></Label>
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleRegister()}
+                placeholder="you@school.edu"
                 className="mt-1 h-12 text-lg"
               />
             </div>
@@ -148,7 +160,7 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
             </Button>
             <Button
               variant="ghost"
-              onClick={() => { setShowRegister(false); setFirstName(""); setLastName(""); }}
+              onClick={() => { setShowRegister(false); setFirstName(""); setLastName(""); setEmail(""); }}
               className="w-full"
             >
               Go Back
