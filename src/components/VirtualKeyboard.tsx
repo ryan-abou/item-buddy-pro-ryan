@@ -36,7 +36,7 @@ export default function VirtualKeyboard({
   );
 
   useEffect(() => {
-    if (mode !== "full") setCurrentMode(mode);
+    setCurrentMode(mode === "full" ? "alpha" : mode);
   }, [mode]);
 
   const handleKey = useCallback(
