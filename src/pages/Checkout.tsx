@@ -14,7 +14,7 @@ import { ArrowLeft, Search, Loader2, CheckCircle2, ShoppingCart } from "lucide-r
 import { toast } from "sonner";
 
 export default function Checkout() {
-  const { student, clear } = useStudent();
+  const { student, resetTimer } = useStudent();
   const navigate = useNavigate();
   const { attachInput, detachInput } = useKioskKeyboard();
   const [items, setItems] = useState<any[]>([]);
@@ -24,11 +24,9 @@ export default function Checkout() {
   const [loading, setLoading] = useState(false);
   const [checkingOut, setCheckingOut] = useState(false);
 
-  // Multi-select state
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [showForm, setShowForm] = useState(false);
 
-  // Checkout form state
   const [duration, setDuration] = useState("");
   const [reason, setReason] = useState("");
   const [teacher, setTeacher] = useState("");
@@ -51,13 +49,14 @@ export default function Checkout() {
       const data = await getAvailableItems(selectedCategory);
       setItems(data);
     } catch {
-      toast.error("Failed to load items");
+      toast.error("Failed to load available items. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   const toggleItem = (itemId: string) => {
+    resetTimer();
     setSelectedItems((prev) => {
       const next = new Set(prev);
       if (next.has(itemId)) {
@@ -70,8 +69,8 @@ export default function Checkout() {
   };
 
   const openCheckoutForm = () => {
+    resetTimer();
     detachInput();
-    // Use the first selected item's default duration as a starting point
     const firstSelected = items.find((i) => selectedItems.has(i.id));
     setDuration(String(firstSelected?.default_loan_duration ?? 1));
     setReason("");
@@ -89,14 +88,15 @@ export default function Checkout() {
 
   const handleCheckout = async () => {
     if (!student || selectedItems.size === 0) return;
+    resetTimer();
     detachInput();
     const days = parseInt(duration, 10);
     if (!days || days < 1) {
-      toast.error("Enter a valid number of days");
+      toast.error("Please enter a valid number of days (at least 1)");
       return;
     }
     if (!reason.trim()) {
-      toast.error("Please provide a reason");
+      toast.error("Please tell us why you need these items");
       return;
     }
     setCheckingOut(true);
@@ -107,10 +107,9 @@ export default function Checkout() {
       }
       toast.success(`${itemIds.length} item${itemIds.length > 1 ? "s" : ""} checked out successfully!`);
       closeCheckoutForm();
-      clear();
       navigate("/");
     } catch (e: any) {
-      toast.error(e.message || "Checkout failed");
+      toast.error(e.message || "This item couldn't be checked out. It may already be borrowed.");
     } finally {
       setCheckingOut(false);
     }
@@ -118,7 +117,6 @@ export default function Checkout() {
 
   const handleBack = () => {
     detachInput();
-    clear();
     navigate("/");
   };
 
@@ -153,16 +151,19 @@ export default function Checkout() {
         <Dialog open={showForm} onOpenChange={(open) => { if (!open) closeCheckoutForm(); }}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Check Out {selectedItems.size} Item{selectedItems.size > 1 ? "s" : ""}</DialogTitle>
+              <DialogTitle>Confirm Check Out</DialogTitle>
             </DialogHeader>
 
             {/* Selected items summary */}
-            <div className="flex flex-wrap gap-2">
-              {selectedItemDetails.map((item) => (
-                <Badge key={item.id} variant="secondary" className="text-xs">
-                  {item.name} <span className="ml-1 font-mono text-muted-foreground">#{item.asset_tag}</span>
-                </Badge>
-              ))}
+            <div className="rounded-lg border bg-muted/30 p-3">
+              <p className="mb-2 text-sm font-medium text-muted-foreground">Items ({selectedItemDetails.length})</p>
+              <div className="flex flex-wrap gap-2">
+                {selectedItemDetails.map((item) => (
+                  <Badge key={item.id} variant="secondary" className="text-xs">
+                    {item.name} <span className="ml-1 font-mono text-muted-foreground">#{item.asset_tag}</span>
+                  </Badge>
+                ))}
+              </div>
             </div>
 
             <div className="grid gap-4">
@@ -213,6 +214,19 @@ export default function Checkout() {
                   readOnly
                 />
               </div>
+
+              {/* Confirmation summary */}
+              {(duration || reason.trim()) && (
+                <div className="rounded-lg border bg-muted/20 p-3 text-sm space-y-1">
+                  <p className="font-medium text-foreground">Summary</p>
+                  <p className="text-muted-foreground">
+                    <span className="font-medium text-foreground">{selectedItemDetails.length}</span> item{selectedItemDetails.length > 1 ? "s" : ""} for{" "}
+                    <span className="font-medium text-foreground">{duration || "?"}</span> day{duration !== "1" ? "s" : ""}
+                  </p>
+                  {reason.trim() && <p className="text-muted-foreground">Reason: {reason.trim()}</p>}
+                  {teacher.trim() && <p className="text-muted-foreground">Teacher: {teacher.trim()}</p>}
+                </div>
+              )}
 
               <Button
                 onClick={handleCheckout}
