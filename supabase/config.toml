@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.student-return]
 verify_jwt = false
+
+[functions.create-staff]
+verify_jwt = false

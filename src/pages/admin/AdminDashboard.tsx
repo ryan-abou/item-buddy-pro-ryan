@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Package, Users, ClipboardList, Settings, LogOut, Home } from "lucide-react";
+import { Package, Users, ClipboardList, Settings, LogOut, Home, ShieldCheck } from "lucide-react";
 import InventoryTab from "./InventoryTab";
 import StudentsTab from "./StudentsTab";
 import LoansTab from "./LoansTab";
 import SettingsTab from "./SettingsTab";
+import StaffTab from "./StaffTab";
 
 export default function AdminDashboard() {
   const { user, role, signOut } = useAuth();
@@ -61,6 +62,12 @@ export default function AdminDashboard() {
               Loans
             </TabsTrigger>
             {isAdmin && (
+              <TabsTrigger value="staff" className="gap-2 touch-target">
+                <ShieldCheck className="h-4 w-4" />
+                Staff
+              </TabsTrigger>
+            )}
+            {isAdmin && (
               <TabsTrigger value="settings" className="gap-2 touch-target">
                 <Settings className="h-4 w-4" />
                 Settings
@@ -77,6 +84,11 @@ export default function AdminDashboard() {
           <TabsContent value="loans">
             <LoansTab isAdmin={isAdmin} />
           </TabsContent>
+          {isAdmin && (
+            <TabsContent value="staff">
+              <StaffTab />
+            </TabsContent>
+          )}
           {isAdmin && (
             <TabsContent value="settings">
               <SettingsTab />
