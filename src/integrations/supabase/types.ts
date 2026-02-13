@@ -146,10 +146,12 @@ export type Database = {
           id: string
           item_id: string
           notes: string | null
+          reason: string | null
           return_at: string | null
           staff_id: string | null
           status: Database["public"]["Enums"]["loan_status"]
           student_id: string
+          teacher: string | null
           updated_at: string
         }
         Insert: {
@@ -159,10 +161,12 @@ export type Database = {
           id?: string
           item_id: string
           notes?: string | null
+          reason?: string | null
           return_at?: string | null
           staff_id?: string | null
           status?: Database["public"]["Enums"]["loan_status"]
           student_id: string
+          teacher?: string | null
           updated_at?: string
         }
         Update: {
@@ -172,10 +176,12 @@ export type Database = {
           id?: string
           item_id?: string
           notes?: string | null
+          reason?: string | null
           return_at?: string | null
           staff_id?: string | null
           status?: Database["public"]["Enums"]["loan_status"]
           student_id?: string
+          teacher?: string | null
           updated_at?: string
         }
         Relationships: [

@@ -46,7 +46,13 @@ export async function getActiveStudentLoans(studentDbId: string) {
   return data ?? [];
 }
 
-export async function checkoutItem(studentDbId: string, itemId: string, durationDays: number) {
+export async function checkoutItem(
+  studentDbId: string,
+  itemId: string,
+  durationDays: number,
+  reason: string,
+  teacher?: string
+) {
   const dueDate = new Date();
   dueDate.setDate(dueDate.getDate() + durationDays);
 
@@ -67,7 +73,13 @@ export async function checkoutItem(studentDbId: string, itemId: string, duration
 
   // Use edge function for checkout (bypasses RLS for student operations)
   const { data, error } = await supabase.functions.invoke("student-checkout", {
-    body: { student_id: studentDbId, item_id: itemId, due_date: dueDate.toISOString() },
+    body: {
+      student_id: studentDbId,
+      item_id: itemId,
+      due_date: dueDate.toISOString(),
+      reason,
+      teacher: teacher || undefined,
+    },
   });
   if (error) throw error;
   if (data?.error) throw new Error(data.error);
