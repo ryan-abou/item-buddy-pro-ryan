@@ -54,6 +54,10 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
       toast.error("Please enter your first and last name");
       return;
     }
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
     setLoading(true);
     try {
       const { error } = await supabase.from("students").insert({
@@ -140,7 +144,7 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
               />
             </div>
             <div>
-              <Label>Email <span className="text-muted-foreground text-xs font-normal">(optional)</span></Label>
+              <Label>Email <span className="text-destructive text-xs font-normal">*</span></Label>
               <Input
                 type="email"
                 value={email}
