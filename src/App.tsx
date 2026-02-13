@@ -8,7 +8,7 @@ import { StudentProvider } from "@/contexts/StudentContext";
 import Index from "./pages/Index";
 import Checkout from "./pages/Checkout";
 import Return from "./pages/Return";
-import MyItems from "./pages/MyItems";
+
 import StaffLogin from "./pages/StaffLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import NotFound from "./pages/NotFound";
@@ -27,7 +27,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/return" element={<Return />} />
-              <Route path="/my-items" element={<MyItems />} />
+              
               <Route path="/staff-login" element={<StaffLogin />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="*" element={<NotFound />} />

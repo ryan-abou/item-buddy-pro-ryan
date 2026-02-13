@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Monitor, RotateCcw, ClipboardList, Shield } from "lucide-react";
+import { Monitor, RotateCcw, Shield } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -33,14 +33,6 @@ const Index = () => {
         >
           <RotateCcw className="h-12 w-12" />
           <span>Return</span>
-        </button>
-
-        <button
-          onClick={() => navigate("/my-items")}
-          className="kiosk-btn kiosk-btn-secondary"
-        >
-          <ClipboardList className="h-12 w-12" />
-          <span>My Items</span>
         </button>
 
         <button

@@ -19,7 +19,7 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
   const [showRegister, setShowRegister] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
+  
   const { identify } = useStudent();
   const navigate = useNavigate();
 
@@ -54,17 +54,13 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
       toast.error("Please enter your first and last name");
       return;
     }
-    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      toast.error("Please enter a valid email address");
-      return;
-    }
     setLoading(true);
     try {
       const { error } = await supabase.from("students").insert({
         student_id: studentId.trim(),
         first_name: firstName.trim(),
         last_name: lastName.trim(),
-        email: email.trim() || null,
+        email: `${studentId.trim()}@fcstu.org`,
       });
       if (error) {
         toast.error(error.message);
@@ -143,17 +139,6 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
                 className="mt-1 h-12 text-lg"
               />
             </div>
-            <div>
-              <Label>Email <span className="text-destructive text-xs font-normal">*</span></Label>
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleRegister()}
-                placeholder="you@school.edu"
-                className="mt-1 h-12 text-lg"
-              />
-            </div>
             <Button
               onClick={handleRegister}
               disabled={loading}
@@ -164,7 +149,7 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
             </Button>
             <Button
               variant="ghost"
-              onClick={() => { setShowRegister(false); setFirstName(""); setLastName(""); setEmail(""); }}
+              onClick={() => { setShowRegister(false); setFirstName(""); setLastName(""); }}
               className="w-full"
             >
               Go Back
