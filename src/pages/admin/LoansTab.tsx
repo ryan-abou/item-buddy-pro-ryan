@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useKioskKeyboard } from "@/contexts/KioskKeyboardContext";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Search, Loader2 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { format } from "date-fns";
 
 export default function LoansTab({ isAdmin }: { isAdmin: boolean }) {
@@ -10,6 +12,8 @@ export default function LoansTab({ isAdmin }: { isAdmin: boolean }) {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"all" | "active" | "overdue" | "returned">("all");
   const [loading, setLoading] = useState(true);
+  const { attachInput, detachInput } = useKioskKeyboard();
+  const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { loadLoans(); }, []);
 
@@ -57,7 +61,7 @@ export default function LoansTab({ isAdmin }: { isAdmin: boolean }) {
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="Search loans..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+          <Input placeholder="Search loans..." value={search} onChange={(e) => setSearch(e.target.value)} onFocus={() => attachInput(searchRef.current, setSearch, search, "full")} ref={searchRef} className="pl-10" inputMode="none" />
         </div>
         <div className="flex gap-2">
           {filters.map((f) => (
@@ -86,6 +90,8 @@ export default function LoansTab({ isAdmin }: { isAdmin: boolean }) {
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">Due Date</th>
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">Returned</th>
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden lg:table-cell">Reason</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden lg:table-cell">Teacher</th>
               </tr>
             </thead>
             <tbody>
@@ -109,6 +115,19 @@ export default function LoansTab({ isAdmin }: { isAdmin: boolean }) {
                     {loan.return_at ? format(new Date(loan.return_at), "MMM d, yyyy") : "—"}
                   </td>
                   <td className="px-4 py-3">{statusBadge(loan)}</td>
+                  <td className="px-4 py-3 hidden lg:table-cell text-muted-foreground max-w-[200px]">
+                    {loan.reason ? (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="block truncate">{loan.reason}</span>
+                          </TooltipTrigger>
+                          <TooltipContent><p className="max-w-xs">{loan.reason}</p></TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ) : "—"}
+                  </td>
+                  <td className="px-4 py-3 hidden lg:table-cell text-muted-foreground">{loan.teacher || "—"}</td>
                 </tr>
               ))}
             </tbody>

@@ -102,6 +102,16 @@ export default function MyItems() {
                         <> • Returned: {format(new Date(loan.return_at), "MMM d, yyyy")}</>
                       )}
                     </div>
+                    {loan.reason && (
+                      <div className="mt-1 text-sm text-muted-foreground">
+                        <span className="font-medium text-foreground">Reason:</span> {loan.reason}
+                      </div>
+                    )}
+                    {loan.teacher && (
+                      <div className="mt-0.5 text-sm text-muted-foreground">
+                        <span className="font-medium text-foreground">Teacher:</span> {loan.teacher}
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     {loan.status !== "returned" && (
