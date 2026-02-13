@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useStudent } from "@/contexts/StudentContext";
+import { useKioskKeyboard } from "@/contexts/KioskKeyboardContext";
 import StudentIdEntry from "@/components/StudentIdEntry";
 import { getAvailableItems, getItemCategories, checkoutItem } from "@/lib/supabase-helpers";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -8,12 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Search, Loader2, CheckCircle2, X } from "lucide-react";
+import { ArrowLeft, Search, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Checkout() {
   const { student, clear } = useStudent();
   const navigate = useNavigate();
+  const { attachInput, detachInput } = useKioskKeyboard();
   const [items, setItems] = useState<any[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -26,6 +28,11 @@ export default function Checkout() {
   const [duration, setDuration] = useState("");
   const [reason, setReason] = useState("");
   const [teacher, setTeacher] = useState("");
+
+  const searchRef = useRef<HTMLInputElement>(null);
+  const durationRef = useRef<HTMLInputElement>(null);
+  const reasonRef = useRef<HTMLTextAreaElement>(null);
+  const teacherRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (student) {
@@ -47,6 +54,7 @@ export default function Checkout() {
   };
 
   const openCheckoutForm = (item: any) => {
+    detachInput();
     setSelectedItem(item);
     setDuration(String(item.default_loan_duration));
     setReason("");
@@ -54,6 +62,7 @@ export default function Checkout() {
   };
 
   const closeCheckoutForm = () => {
+    detachInput();
     setSelectedItem(null);
     setDuration("");
     setReason("");
@@ -62,6 +71,7 @@ export default function Checkout() {
 
   const handleCheckout = async () => {
     if (!student || !selectedItem) return;
+    detachInput();
     const days = parseInt(duration, 10);
     if (!days || days < 1) {
       toast.error("Enter a valid number of days");
@@ -86,6 +96,7 @@ export default function Checkout() {
   };
 
   const handleBack = () => {
+    detachInput();
     clear();
     navigate("/");
   };
@@ -101,7 +112,7 @@ export default function Checkout() {
   );
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="min-h-screen bg-background p-6 pb-72">
       <div className="mx-auto max-w-3xl animate-fade-in">
         <button onClick={handleBack} className="mb-4 flex items-center gap-2 text-muted-foreground hover:text-foreground touch-target">
           <ArrowLeft className="h-5 w-5" />
@@ -128,12 +139,15 @@ export default function Checkout() {
                   How many days do you need it? <span className="text-destructive">*</span>
                 </label>
                 <Input
-                  type="number"
-                  min={1}
+                  ref={durationRef}
+                  type="text"
+                  inputMode="none"
                   value={duration}
                   onChange={(e) => setDuration(e.target.value)}
+                  onFocus={() => attachInput(durationRef.current, setDuration, "numeric")}
                   placeholder="Number of days"
                   className="h-12 text-base"
+                  readOnly
                 />
               </div>
 
@@ -142,10 +156,13 @@ export default function Checkout() {
                   Why do you need it? <span className="text-destructive">*</span>
                 </label>
                 <Textarea
+                  ref={reasonRef}
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
+                  onFocus={() => attachInput(reasonRef.current, setReason, "full")}
                   placeholder="e.g. Science project, class presentation..."
                   className="min-h-[80px] text-base"
+                  readOnly
                 />
               </div>
 
@@ -154,10 +171,14 @@ export default function Checkout() {
                   Which teacher sent you? <span className="text-muted-foreground text-xs">(optional)</span>
                 </label>
                 <Input
+                  ref={teacherRef}
                   value={teacher}
                   onChange={(e) => setTeacher(e.target.value)}
+                  onFocus={() => attachInput(teacherRef.current, setTeacher, "alpha")}
                   placeholder="Teacher name"
                   className="h-12 text-base"
+                  inputMode="none"
+                  readOnly
                 />
               </div>
 
@@ -183,10 +204,13 @@ export default function Checkout() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
+              ref={searchRef}
               placeholder="Search by name or asset tag..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              onFocus={() => attachInput(searchRef.current, setSearch, "full")}
               className="h-12 pl-10 text-base"
+              inputMode="none"
             />
           </div>
         </div>
@@ -197,7 +221,7 @@ export default function Checkout() {
               key={cat}
               variant={selectedCategory === cat ? "default" : "secondary"}
               className="cursor-pointer touch-target px-4 py-2 text-sm"
-              onClick={() => setSelectedCategory(cat)}
+              onClick={() => { detachInput(); setSelectedCategory(cat); }}
             >
               {cat}
             </Badge>

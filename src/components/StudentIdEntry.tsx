@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useStudent } from "@/contexts/StudentContext";
 import { registerStudent } from "@/lib/supabase-helpers";
+import { useKioskKeyboard } from "@/contexts/KioskKeyboardContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,11 +20,17 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
   const [showRegister, setShowRegister] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  
+
   const { identify } = useStudent();
   const navigate = useNavigate();
+  const { attachInput, detachInput } = useKioskKeyboard();
+
+  const idRef = useRef<HTMLInputElement>(null);
+  const firstRef = useRef<HTMLInputElement>(null);
+  const lastRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = async () => {
+    detachInput();
     const trimmed = studentId.trim();
     if (!trimmed) {
       toast.error("Please enter your Student ID");
@@ -50,6 +57,7 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
   };
 
   const handleRegister = async () => {
+    detachInput();
     if (!firstName.trim() || !lastName.trim()) {
       toast.error("Please enter your first and last name");
       return;
@@ -58,7 +66,6 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
     try {
       const student = await registerStudent(studentId.trim(), firstName.trim(), lastName.trim());
       if (student) {
-        // Re-identify to set context
         await identify(studentId.trim());
         toast.success(`Welcome, ${student.first_name}! You're registered.`);
         onIdentified();
@@ -70,11 +77,16 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
     }
   };
 
+  // Numeric setter that strips non-digits
+  const setStudentIdNumeric = useCallback((val: string) => {
+    setStudentId(val.replace(/\D/g, ""));
+  }, []);
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-6">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-6 pb-72">
       <div className="w-full max-w-md animate-fade-in">
         <button
-          onClick={() => navigate("/")}
+          onClick={() => { detachInput(); navigate("/"); }}
           className="mb-8 flex items-center gap-2 text-muted-foreground hover:text-foreground touch-target"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -89,15 +101,16 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
         {!showRegister ? (
           <>
             <Input
+              ref={idRef}
               type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
+              inputMode="none"
               placeholder="Student ID"
               value={studentId}
               onChange={(e) => setStudentId(e.target.value.replace(/\D/g, ""))}
-              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+              onFocus={() => attachInput(idRef.current, setStudentIdNumeric, "numeric", handleSubmit)}
               className="mb-4 h-16 text-center text-2xl font-mono"
               autoFocus
+              readOnly
             />
             <Button
               onClick={handleSubmit}
@@ -110,25 +123,33 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
           </>
         ) : (
           <div className="space-y-4">
-          <div className="rounded-lg bg-muted/50 px-4 py-3 text-sm text-muted-foreground space-y-1">
+            <div className="rounded-lg bg-muted/50 px-4 py-3 text-sm text-muted-foreground space-y-1">
               <div>Student ID: <span className="font-mono font-semibold text-foreground">{studentId}</span></div>
               <div>Email: <span className="font-medium text-foreground">{studentId.trim()}@fcstu.org</span></div>
             </div>
             <div>
               <Label>First Name</Label>
               <Input
+                ref={firstRef}
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
+                onFocus={() => attachInput(firstRef.current, setFirstName, "alpha")}
                 className="mt-1 h-12 text-lg"
                 autoFocus
+                inputMode="none"
+                readOnly
               />
             </div>
             <div>
               <Label>Last Name</Label>
               <Input
+                ref={lastRef}
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
+                onFocus={() => attachInput(lastRef.current, setLastName, "alpha")}
                 className="mt-1 h-12 text-lg"
+                inputMode="none"
+                readOnly
               />
             </div>
             <Button
@@ -141,7 +162,7 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
             </Button>
             <Button
               variant="ghost"
-              onClick={() => { setShowRegister(false); setFirstName(""); setLastName(""); }}
+              onClick={() => { detachInput(); setShowRegister(false); setFirstName(""); setLastName(""); }}
               className="w-full"
             >
               Go Back

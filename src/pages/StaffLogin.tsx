@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useKioskKeyboard } from "@/contexts/KioskKeyboardContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,9 +14,14 @@ export default function StaffLogin() {
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
+  const { attachInput, detachInput } = useKioskKeyboard();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passRef = useRef<HTMLInputElement>(null);
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    detachInput();
     if (!email || !password) {
       toast.error("Please fill in all fields");
       return;
@@ -33,10 +39,10 @@ export default function StaffLogin() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-6">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-6 pb-72">
       <div className="w-full max-w-sm animate-fade-in">
         <button
-          onClick={() => navigate("/")}
+          onClick={() => { detachInput(); navigate("/"); }}
           className="mb-8 flex items-center gap-2 text-muted-foreground hover:text-foreground touch-target"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -52,22 +58,28 @@ export default function StaffLogin() {
           <div>
             <Label htmlFor="email">Email</Label>
             <Input
+              ref={emailRef}
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              onFocus={() => attachInput(emailRef.current, setEmail, "full")}
               className="mt-1 h-12"
               autoFocus
+              inputMode="none"
             />
           </div>
           <div>
             <Label htmlFor="password">Password</Label>
             <Input
+              ref={passRef}
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onFocus={() => attachInput(passRef.current, setPassword, "full", () => handleSubmit())}
               className="mt-1 h-12"
+              inputMode="none"
             />
           </div>
           <Button type="submit" disabled={loading} className="h-12 w-full text-base font-semibold">
