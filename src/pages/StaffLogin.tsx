@@ -63,7 +63,7 @@ export default function StaffLogin() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              onFocus={() => attachInput(emailRef.current, setEmail, "full")}
+              onFocus={() => attachInput(emailRef.current, setEmail, email, "full")}
               className="mt-1 h-12"
               autoFocus
               inputMode="none"
@@ -77,7 +77,7 @@ export default function StaffLogin() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              onFocus={() => attachInput(passRef.current, setPassword, "full", () => handleSubmit())}
+              onFocus={() => attachInput(passRef.current, setPassword, password, "full", () => handleSubmit())}
               className="mt-1 h-12"
               inputMode="none"
             />

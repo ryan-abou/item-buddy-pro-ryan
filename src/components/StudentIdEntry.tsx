@@ -107,7 +107,7 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
               placeholder="Student ID"
               value={studentId}
               onChange={(e) => setStudentId(e.target.value.replace(/\D/g, ""))}
-              onFocus={() => attachInput(idRef.current, setStudentIdNumeric, "numeric", handleSubmit)}
+              onFocus={() => attachInput(idRef.current, setStudentIdNumeric, studentId, "numeric", handleSubmit)}
               className="mb-4 h-16 text-center text-2xl font-mono"
               autoFocus
               readOnly
@@ -133,7 +133,7 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
                 ref={firstRef}
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                onFocus={() => attachInput(firstRef.current, setFirstName, "alpha")}
+                onFocus={() => attachInput(firstRef.current, setFirstName, firstName, "alpha")}
                 className="mt-1 h-12 text-lg"
                 autoFocus
                 inputMode="none"
@@ -146,7 +146,7 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
                 ref={lastRef}
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                onFocus={() => attachInput(lastRef.current, setLastName, "alpha")}
+                onFocus={() => attachInput(lastRef.current, setLastName, lastName, "alpha")}
                 className="mt-1 h-12 text-lg"
                 inputMode="none"
                 readOnly
