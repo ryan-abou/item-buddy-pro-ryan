@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useStudent } from "@/contexts/StudentContext";
-import { supabase } from "@/integrations/supabase/client";
+import { registerStudent } from "@/lib/supabase-helpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -56,24 +56,15 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
     }
     setLoading(true);
     try {
-      const { error } = await supabase.from("students").insert({
-        student_id: studentId.trim(),
-        first_name: firstName.trim(),
-        last_name: lastName.trim(),
-        email: `${studentId.trim()}@fcstu.org`,
-      });
-      if (error) {
-        toast.error(error.message);
-        setLoading(false);
-        return;
-      }
-      const student = await identify(studentId.trim());
+      const student = await registerStudent(studentId.trim(), firstName.trim(), lastName.trim());
       if (student) {
+        // Re-identify to set context
+        await identify(studentId.trim());
         toast.success(`Welcome, ${student.first_name}! You're registered.`);
         onIdentified();
       }
-    } catch {
-      toast.error("Registration failed. Please try again.");
+    } catch (err: any) {
+      toast.error(err?.message || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }

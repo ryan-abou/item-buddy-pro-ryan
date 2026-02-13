@@ -1,14 +1,21 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export async function lookupStudent(studentId: string) {
-  const { data, error } = await supabase
-    .from("students")
-    .select("*")
-    .eq("student_id", studentId)
-    .eq("active", true)
-    .maybeSingle();
+  const { data, error } = await supabase.functions.invoke("student-lookup", {
+    body: { student_id: studentId },
+  });
   if (error) throw error;
-  return data;
+  if (data?.error) throw new Error(data.error);
+  return data?.student ?? null;
+}
+
+export async function registerStudent(studentId: string, firstName: string, lastName: string) {
+  const { data, error } = await supabase.functions.invoke("student-register", {
+    body: { student_id: studentId, first_name: firstName, last_name: lastName },
+  });
+  if (error) throw error;
+  if (data?.error) throw new Error(data.error);
+  return data?.student ?? null;
 }
 
 export async function getAvailableItems(category?: string) {
@@ -26,24 +33,21 @@ export async function getAvailableItems(category?: string) {
 }
 
 export async function getStudentLoans(studentDbId: string) {
-  const { data, error } = await supabase
-    .from("loans")
-    .select("*, items(*)")
-    .eq("student_id", studentDbId)
-    .order("checkout_at", { ascending: false });
+  const { data, error } = await supabase.functions.invoke("student-loans", {
+    body: { student_db_id: studentDbId, active_only: false },
+  });
   if (error) throw error;
-  return data ?? [];
+  if (data?.error) throw new Error(data.error);
+  return data?.loans ?? [];
 }
 
 export async function getActiveStudentLoans(studentDbId: string) {
-  const { data, error } = await supabase
-    .from("loans")
-    .select("*, items(*)")
-    .eq("student_id", studentDbId)
-    .in("status", ["active", "overdue"])
-    .order("checkout_at", { ascending: false });
+  const { data, error } = await supabase.functions.invoke("student-loans", {
+    body: { student_db_id: studentDbId, active_only: true },
+  });
   if (error) throw error;
-  return data ?? [];
+  if (data?.error) throw new Error(data.error);
+  return data?.loans ?? [];
 }
 
 export async function checkoutItem(
@@ -55,21 +59,6 @@ export async function checkoutItem(
 ) {
   const dueDate = new Date();
   dueDate.setDate(dueDate.getDate() + durationDays);
-
-  // Check max items
-  const activeLoans = await getActiveStudentLoans(studentDbId);
-  const student = await supabase.from("students").select("max_items").eq("id", studentDbId).single();
-  if (student.error) throw student.error;
-  if (activeLoans.length >= (student.data?.max_items ?? 3)) {
-    throw new Error(`Maximum of ${student.data?.max_items ?? 3} items already checked out`);
-  }
-
-  // Check item availability
-  const item = await supabase.from("items").select("status").eq("id", itemId).single();
-  if (item.error) throw item.error;
-  if (item.data?.status !== "available") {
-    throw new Error("Item is not available for checkout");
-  }
 
   // Use edge function for checkout (bypasses RLS for student operations)
   const { data, error } = await supabase.functions.invoke("student-checkout", {

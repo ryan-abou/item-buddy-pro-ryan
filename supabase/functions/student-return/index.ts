@@ -13,8 +13,16 @@ Deno.serve(async (req) => {
   try {
     const { loan_id } = await req.json();
 
-    if (!loan_id) {
+    if (!loan_id || typeof loan_id !== "string") {
       return new Response(JSON.stringify({ error: "Missing loan_id" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Validate UUID format
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(loan_id)) {
+      return new Response(JSON.stringify({ error: "Invalid loan ID format" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -71,7 +79,8 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error("Return error:", error);
+    return new Response(JSON.stringify({ error: "An unexpected error occurred" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
