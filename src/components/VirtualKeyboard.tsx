@@ -8,6 +8,7 @@ interface VirtualKeyboardProps {
   onEnter: () => void;
   visible: boolean;
   mode?: "numeric" | "alpha" | "full";
+  onPointerDown?: (e: React.PointerEvent) => void;
 }
 
 const numericKeys = [
@@ -29,6 +30,7 @@ export default function VirtualKeyboard({
   onEnter,
   visible,
   mode = "numeric",
+  onPointerDown,
 }: VirtualKeyboardProps) {
   const [shifted, setShifted] = useState(false);
   const [currentMode, setCurrentMode] = useState<"numeric" | "alpha">(
@@ -51,7 +53,7 @@ export default function VirtualKeyboard({
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-muted/95 backdrop-blur-sm border-t border-border p-2 pb-4 animate-fade-in">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-muted/95 backdrop-blur-sm border-t border-border p-2 pb-4 animate-fade-in" onPointerDown={onPointerDown}>
       {currentMode === "numeric" ? (
         <div className="mx-auto max-w-xs space-y-2">
           {numericKeys.map((row, ri) => (

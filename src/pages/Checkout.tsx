@@ -149,7 +149,7 @@ export default function Checkout() {
 
         {/* Checkout details dialog */}
         <Dialog open={showForm} onOpenChange={(open) => { if (!open) closeCheckoutForm(); }}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md" onOpenAutoFocus={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
             <DialogHeader>
               <DialogTitle>Confirm Check Out</DialogTitle>
             </DialogHeader>
@@ -174,13 +174,11 @@ export default function Checkout() {
                 <Input
                   ref={durationRef}
                   type="text"
-                  inputMode="none"
                   value={duration}
                   onChange={(e) => setDuration(e.target.value)}
                   onFocus={() => attachInput(durationRef.current, setDuration, duration, "numeric")}
                   placeholder="Number of days"
                   className="h-12 text-base"
-                  readOnly
                 />
               </div>
 
@@ -195,7 +193,6 @@ export default function Checkout() {
                   onFocus={() => attachInput(reasonRef.current, setReason, reason, "full")}
                   placeholder="e.g. Science project, class presentation..."
                   className="min-h-[80px] text-base"
-                  readOnly
                 />
               </div>
 
@@ -210,8 +207,6 @@ export default function Checkout() {
                   onFocus={() => attachInput(teacherRef.current, setTeacher, teacher, "alpha")}
                   placeholder="Teacher name"
                   className="h-12 text-base"
-                  inputMode="none"
-                  readOnly
                 />
               </div>
 
@@ -256,7 +251,6 @@ export default function Checkout() {
               onChange={(e) => setSearch(e.target.value)}
               onFocus={() => attachInput(searchRef.current, setSearch, search, "full")}
               className="h-12 pl-10 text-base"
-              inputMode="none"
             />
           </div>
         </div>
