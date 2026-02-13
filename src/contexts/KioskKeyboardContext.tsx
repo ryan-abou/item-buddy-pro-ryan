@@ -49,24 +49,33 @@ export function KioskKeyboardProvider({ children }: { children: React.ReactNode 
     valueRef.current = "";
   }, []);
 
+  // Read current value from the actual input element to stay in sync with physical keyboard typing
+  const getCurrentValue = useCallback(() => {
+    if (inputRef.current) {
+      return inputRef.current.value;
+    }
+    return valueRef.current;
+  }, []);
+
   const handleKeyPress = useCallback((key: string) => {
     if (setterRef.current) {
-      const newVal = valueRef.current + key;
+      const current = getCurrentValue();
+      const newVal = current + key;
       valueRef.current = newVal;
       setterRef.current(newVal);
     }
-  }, []);
+  }, [getCurrentValue]);
 
   const handleBackspace = useCallback(() => {
     if (setterRef.current) {
-      const cur = valueRef.current;
-      if (cur.length > 0) {
-        const newVal = cur.slice(0, -1);
+      const current = getCurrentValue();
+      if (current.length > 0) {
+        const newVal = current.slice(0, -1);
         valueRef.current = newVal;
         setterRef.current(newVal);
       }
     }
-  }, []);
+  }, [getCurrentValue]);
 
   const handleEnter = useCallback(() => {
     if (onEnterRef.current) {
@@ -75,6 +84,10 @@ export function KioskKeyboardProvider({ children }: { children: React.ReactNode 
       detachInput();
     }
   }, [detachInput]);
+
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    e.preventDefault();
+  }, []);
 
   return (
     <KioskKeyboardContext.Provider value={{ attachInput, detachInput, isKeyboardVisible: visible }}>
@@ -85,6 +98,7 @@ export function KioskKeyboardProvider({ children }: { children: React.ReactNode 
         onKeyPress={handleKeyPress}
         onBackspace={handleBackspace}
         onEnter={handleEnter}
+        onPointerDown={handlePointerDown}
       />
     </KioskKeyboardContext.Provider>
   );

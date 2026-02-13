@@ -110,7 +110,6 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
               onFocus={() => attachInput(idRef.current, setStudentIdNumeric, studentId, "numeric", handleSubmit)}
               className="mb-4 h-16 text-center text-2xl font-mono"
               autoFocus
-              readOnly
             />
             <Button
               onClick={handleSubmit}
@@ -136,8 +135,6 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
                 onFocus={() => attachInput(firstRef.current, setFirstName, firstName, "alpha")}
                 className="mt-1 h-12 text-lg"
                 autoFocus
-                inputMode="none"
-                readOnly
               />
             </div>
             <div>
@@ -148,8 +145,6 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
                 onChange={(e) => setLastName(e.target.value)}
                 onFocus={() => attachInput(lastRef.current, setLastName, lastName, "alpha")}
                 className="mt-1 h-12 text-lg"
-                inputMode="none"
-                readOnly
               />
             </div>
             <Button

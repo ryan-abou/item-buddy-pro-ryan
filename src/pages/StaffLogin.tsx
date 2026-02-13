@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useKioskKeyboard } from "@/contexts/KioskKeyboardContext";
@@ -18,6 +18,13 @@ export default function StaffLogin() {
 
   const emailRef = useRef<HTMLInputElement>(null);
   const passRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    return () => {
+      setEmail("");
+      setPassword("");
+    };
+  }, []);
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -42,7 +49,7 @@ export default function StaffLogin() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-6 pb-72">
       <div className="w-full max-w-sm animate-fade-in">
         <button
-          onClick={() => { detachInput(); navigate("/"); }}
+          onClick={() => { detachInput(); setEmail(""); setPassword(""); navigate("/"); }}
           className="mb-8 flex items-center gap-2 text-muted-foreground hover:text-foreground touch-target"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -66,7 +73,6 @@ export default function StaffLogin() {
               onFocus={() => attachInput(emailRef.current, setEmail, email, "full")}
               className="mt-1 h-12"
               autoFocus
-              inputMode="none"
             />
           </div>
           <div>
@@ -79,7 +85,6 @@ export default function StaffLogin() {
               onChange={(e) => setPassword(e.target.value)}
               onFocus={() => attachInput(passRef.current, setPassword, password, "full", () => handleSubmit())}
               className="mt-1 h-12"
-              inputMode="none"
             />
           </div>
           <Button type="submit" disabled={loading} className="h-12 w-full text-base font-semibold">
