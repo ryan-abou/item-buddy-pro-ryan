@@ -1,10 +1,11 @@
-import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from "react";
+import React, { createContext, useContext, useState, useCallback, useRef } from "react";
 import VirtualKeyboard from "@/components/VirtualKeyboard";
 
 interface KioskKeyboardContextType {
   attachInput: (
     ref: HTMLInputElement | HTMLTextAreaElement | null,
     setter: (val: string) => void,
+    currentValue: string,
     mode?: "numeric" | "alpha" | "full",
     onEnter?: () => void
   ) => void;
@@ -26,12 +27,13 @@ export function KioskKeyboardProvider({ children }: { children: React.ReactNode 
     (
       ref: HTMLInputElement | HTMLTextAreaElement | null,
       setter: (val: string) => void,
+      currentValue: string,
       inputMode: "numeric" | "alpha" | "full" = "numeric",
       onEnter?: () => void
     ) => {
       inputRef.current = ref;
       setterRef.current = setter;
-      valueRef.current = ref?.value ?? "";
+      valueRef.current = currentValue;
       onEnterRef.current = onEnter ?? null;
       setMode(inputMode);
       setVisible(true);
@@ -47,41 +49,21 @@ export function KioskKeyboardProvider({ children }: { children: React.ReactNode 
   }, []);
 
   const handleKeyPress = useCallback((key: string) => {
-    if (setterRef.current && inputRef.current) {
-      const el = inputRef.current;
-      const start = el.selectionStart ?? el.value.length;
-      const end = el.selectionEnd ?? el.value.length;
-      const newVal = el.value.slice(0, start) + key + el.value.slice(end);
+    if (setterRef.current) {
+      const newVal = valueRef.current + key;
       valueRef.current = newVal;
       setterRef.current(newVal);
-      // Restore cursor position after React re-render
-      requestAnimationFrame(() => {
-        el.setSelectionRange(start + key.length, start + key.length);
-        el.focus();
-      });
     }
   }, []);
 
   const handleBackspace = useCallback(() => {
-    if (setterRef.current && inputRef.current) {
-      const el = inputRef.current;
-      const start = el.selectionStart ?? el.value.length;
-      const end = el.selectionEnd ?? el.value.length;
-      let newVal: string;
-      if (start !== end) {
-        newVal = el.value.slice(0, start) + el.value.slice(end);
-      } else if (start > 0) {
-        newVal = el.value.slice(0, start - 1) + el.value.slice(start);
-      } else {
-        return;
+    if (setterRef.current) {
+      const cur = valueRef.current;
+      if (cur.length > 0) {
+        const newVal = cur.slice(0, -1);
+        valueRef.current = newVal;
+        setterRef.current(newVal);
       }
-      valueRef.current = newVal;
-      setterRef.current(newVal);
-      const newPos = start !== end ? start : Math.max(0, start - 1);
-      requestAnimationFrame(() => {
-        el.setSelectionRange(newPos, newPos);
-        el.focus();
-      });
     }
   }, []);
 

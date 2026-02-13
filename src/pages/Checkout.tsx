@@ -144,7 +144,7 @@ export default function Checkout() {
                   inputMode="none"
                   value={duration}
                   onChange={(e) => setDuration(e.target.value)}
-                  onFocus={() => attachInput(durationRef.current, setDuration, "numeric")}
+                  onFocus={() => attachInput(durationRef.current, setDuration, duration, "numeric")}
                   placeholder="Number of days"
                   className="h-12 text-base"
                   readOnly
@@ -159,7 +159,7 @@ export default function Checkout() {
                   ref={reasonRef}
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
-                  onFocus={() => attachInput(reasonRef.current, setReason, "full")}
+                  onFocus={() => attachInput(reasonRef.current, setReason, reason, "full")}
                   placeholder="e.g. Science project, class presentation..."
                   className="min-h-[80px] text-base"
                   readOnly
@@ -174,7 +174,7 @@ export default function Checkout() {
                   ref={teacherRef}
                   value={teacher}
                   onChange={(e) => setTeacher(e.target.value)}
-                  onFocus={() => attachInput(teacherRef.current, setTeacher, "alpha")}
+                  onFocus={() => attachInput(teacherRef.current, setTeacher, teacher, "alpha")}
                   placeholder="Teacher name"
                   className="h-12 text-base"
                   inputMode="none"
@@ -208,7 +208,7 @@ export default function Checkout() {
               placeholder="Search by name or asset tag..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              onFocus={() => attachInput(searchRef.current, setSearch, "full")}
+              onFocus={() => attachInput(searchRef.current, setSearch, search, "full")}
               className="h-12 pl-10 text-base"
               inputMode="none"
             />

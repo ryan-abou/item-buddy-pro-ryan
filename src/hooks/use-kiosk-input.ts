@@ -5,6 +5,7 @@ type KbMode = "numeric" | "alpha" | "full";
 
 export function useKioskInput(
   setter: (val: string) => void,
+  currentValue: string,
   mode: KbMode = "numeric",
   onEnter?: () => void
 ) {
@@ -12,8 +13,8 @@ export function useKioskInput(
   const ref = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
 
   const onFocus = useCallback(() => {
-    attachInput(ref.current, setter, mode, onEnter);
-  }, [attachInput, setter, mode, onEnter]);
+    attachInput(ref.current, setter, currentValue, mode, onEnter);
+  }, [attachInput, setter, currentValue, mode, onEnter]);
 
   return { ref, onFocus };
 }
