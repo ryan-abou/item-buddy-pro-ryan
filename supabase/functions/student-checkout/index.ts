@@ -20,6 +20,39 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Validate UUID formats
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(student_id) || !uuidRegex.test(item_id)) {
+      return new Response(JSON.stringify({ error: "Invalid ID format" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Validate due_date is a valid date
+    const parsedDate = new Date(due_date);
+    if (isNaN(parsedDate.getTime())) {
+      return new Response(JSON.stringify({ error: "Invalid due date" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Validate reason length
+    if (typeof reason !== "string" || reason.length > 500) {
+      return new Response(JSON.stringify({ error: "Invalid reason" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (teacher && (typeof teacher !== "string" || teacher.length > 200)) {
+      return new Response(JSON.stringify({ error: "Invalid teacher" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -77,7 +110,8 @@ Deno.serve(async (req) => {
     });
 
     if (loanError) {
-      return new Response(JSON.stringify({ error: loanError.message }), {
+      console.error("Loan creation error:", loanError);
+      return new Response(JSON.stringify({ error: "Unable to complete checkout. Please try again." }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -99,7 +133,8 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error("Checkout error:", error);
+    return new Response(JSON.stringify({ error: "An unexpected error occurred" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

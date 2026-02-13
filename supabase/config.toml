@@ -8,3 +8,12 @@ verify_jwt = false
 
 [functions.create-staff]
 verify_jwt = false
+
+[functions.student-lookup]
+verify_jwt = false
+
+[functions.student-register]
+verify_jwt = false
+
+[functions.student-loans]
+verify_jwt = false
