@@ -101,6 +101,16 @@ export default function Return() {
                       <span className="status-overdue rounded px-2 py-0.5 text-xs">OVERDUE</span>
                     )}
                   </div>
+                  {loan.reason && (
+                    <div className="mt-1 text-sm text-muted-foreground">
+                      <span className="font-medium text-foreground">Reason:</span> {loan.reason}
+                    </div>
+                  )}
+                  {loan.teacher && (
+                    <div className="mt-0.5 text-sm text-muted-foreground">
+                      <span className="font-medium text-foreground">Teacher:</span> {loan.teacher}
+                    </div>
+                  )}
                 </div>
                 <Button
                   onClick={() => handleReturn(loan.id)}
