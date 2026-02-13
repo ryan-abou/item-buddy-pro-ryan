@@ -37,7 +37,7 @@ const Index = () => {
 
         <button
           onClick={() => navigate("/staff-login")}
-          className="kiosk-btn kiosk-btn-secondary"
+          className="kiosk-btn kiosk-btn-secondary col-span-2"
         >
           <Shield className="h-12 w-12" />
           <span>Staff Login</span>
