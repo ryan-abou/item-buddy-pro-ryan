@@ -119,8 +119,9 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
           </>
         ) : (
           <div className="space-y-4">
-            <div className="rounded-lg bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
-              Student ID: <span className="font-mono font-semibold text-foreground">{studentId}</span>
+          <div className="rounded-lg bg-muted/50 px-4 py-3 text-sm text-muted-foreground space-y-1">
+              <div>Student ID: <span className="font-mono font-semibold text-foreground">{studentId}</span></div>
+              <div>Email: <span className="font-medium text-foreground">{studentId.trim()}@fcstu.org</span></div>
             </div>
             <div>
               <Label>First Name</Label>
