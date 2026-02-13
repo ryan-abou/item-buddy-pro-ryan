@@ -11,9 +11,9 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { student_id, item_id, due_date } = await req.json();
+    const { student_id, item_id, due_date, reason, teacher } = await req.json();
 
-    if (!student_id || !item_id || !due_date) {
+    if (!student_id || !item_id || !due_date || !reason) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -72,6 +72,8 @@ Deno.serve(async (req) => {
       student_id,
       due_date,
       status: "active",
+      reason,
+      teacher: teacher || null,
     });
 
     if (loanError) {
