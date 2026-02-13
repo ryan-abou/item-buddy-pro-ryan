@@ -28,8 +28,8 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
       toast.error("Please enter your Student ID");
       return;
     }
-    if (!/^\d{10}$/.test(trimmed)) {
-      toast.error("Student ID must be exactly 10 digits");
+    if (!/^\d{6,}$/.test(trimmed)) {
+      toast.error("Student ID must be at least 6 digits");
       return;
     }
     setLoading(true);
@@ -90,7 +90,7 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
 
         <h1 className="mb-2 text-3xl font-bold text-foreground">{title}</h1>
         <p className="mb-8 text-muted-foreground">
-          {showRegister ? "First time? Enter your name to get started." : "Enter your 10-digit Student ID to continue"}
+          {showRegister ? "First time? Enter your name to get started." : "Enter your Student ID to continue"}
         </p>
 
         {!showRegister ? (
@@ -99,12 +99,11 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
               type="text"
               inputMode="numeric"
               pattern="[0-9]*"
-              placeholder="Student ID (10 digits)"
+              placeholder="Student ID"
               value={studentId}
-              onChange={(e) => setStudentId(e.target.value.replace(/\D/g, "").slice(0, 10))}
+              onChange={(e) => setStudentId(e.target.value.replace(/\D/g, ""))}
               onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
               className="mb-4 h-16 text-center text-2xl font-mono"
-              maxLength={10}
               autoFocus
             />
             <Button
