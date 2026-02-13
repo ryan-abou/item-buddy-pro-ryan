@@ -2,9 +2,14 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useStudent } from "@/contexts/StudentContext";
 import StudentIdEntry from "@/components/StudentIdEntry";
-import { getStudentLoans } from "@/lib/supabase-helpers";
+import { getStudentLoans, returnItem } from "@/lib/supabase-helpers";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { ArrowLeft, Loader2, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -13,6 +18,7 @@ export default function MyItems() {
   const navigate = useNavigate();
   const [loans, setLoans] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [returning, setReturning] = useState<string | null>(null);
 
   useEffect(() => {
     if (student) {
@@ -27,6 +33,20 @@ export default function MyItems() {
   const handleBack = () => {
     clear();
     navigate("/");
+  };
+
+  const handleReturn = async (loanId: string) => {
+    setReturning(loanId);
+    try {
+      await returnItem(loanId);
+      toast.success("Item returned successfully!");
+      const updated = await getStudentLoans(student!.id);
+      setLoans(updated);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to return item");
+    } finally {
+      setReturning(null);
+    }
   };
 
   if (!student) {
@@ -83,7 +103,37 @@ export default function MyItems() {
                       )}
                     </div>
                   </div>
-                  {statusDisplay(loan)}
+                  <div className="flex items-center gap-2">
+                    {loan.status !== "returned" && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="sm" variant="outline" disabled={returning === loan.id}>
+                            {returning === loan.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <RotateCcw className="h-4 w-4" />
+                            )}
+                            Return
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Return {loan.items?.name}?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will mark the item as returned and make it available for others.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleReturn(loan.id)}>
+                              Confirm Return
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
+                    {statusDisplay(loan)}
+                  </div>
                 </div>
               </div>
             ))}
