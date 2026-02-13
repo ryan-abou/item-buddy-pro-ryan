@@ -50,7 +50,7 @@ export default function StudentIdEntry({ title, onIdentified }: Props) {
         setShowRegister(true);
       }
     } catch {
-      toast.error("Something went wrong. Please try again.");
+      toast.error("We couldn't find that Student ID. Please check and try again.");
     } finally {
       setLoading(false);
     }

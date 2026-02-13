@@ -46,6 +46,7 @@ export function KioskKeyboardProvider({ children }: { children: React.ReactNode 
     inputRef.current = null;
     setterRef.current = null;
     onEnterRef.current = null;
+    valueRef.current = "";
   }, []);
 
   const handleKeyPress = useCallback((key: string) => {
