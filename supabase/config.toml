@@ -1,0 +1,7 @@
+project_id = "ubdvnejzhnmuosutrfhv"
+
+[functions.student-checkout]
+verify_jwt = false
+
+[functions.student-return]
+verify_jwt = false

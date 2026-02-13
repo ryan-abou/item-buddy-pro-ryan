@@ -1,0 +1,151 @@
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Search, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+
+const STATUS_STYLES: Record<string, string> = {
+  available: "status-available",
+  checked_out: "status-checked-out",
+  maintenance: "status-maintenance",
+  lost: "status-lost",
+  retired: "status-maintenance",
+};
+
+export default function InventoryTab({ isAdmin }: { isAdmin: boolean }) {
+  const [items, setItems] = useState<any[]>([]);
+  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [form, setForm] = useState({
+    asset_tag: "", name: "", category: "General", description: "",
+    condition: "Good", location: "", default_loan_duration: "1",
+  });
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => { loadItems(); }, []);
+
+  const loadItems = async () => {
+    setLoading(true);
+    const { data } = await supabase.from("items").select("*").order("name");
+    setItems(data ?? []);
+    setLoading(false);
+  };
+
+  const handleSave = async () => {
+    if (!form.asset_tag || !form.name) {
+      toast.error("Asset Tag and Name are required");
+      return;
+    }
+    setSaving(true);
+    const { error } = await supabase.from("items").insert({
+      ...form,
+      default_loan_duration: parseInt(form.default_loan_duration) || 1,
+    });
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Item added");
+      setDialogOpen(false);
+      setForm({ asset_tag: "", name: "", category: "General", description: "", condition: "Good", location: "", default_loan_duration: "1" });
+      loadItems();
+    }
+    setSaving(false);
+  };
+
+  const updateStatus = async (id: string, status: string) => {
+    const { error } = await supabase.from("items").update({ status: status as any }).eq("id", id);
+    if (error) toast.error(error.message);
+    else { toast.success("Status updated"); loadItems(); }
+  };
+
+  const filtered = items.filter(
+    (i) =>
+      i.name.toLowerCase().includes(search.toLowerCase()) ||
+      i.asset_tag.toLowerCase().includes(search.toLowerCase()) ||
+      i.category.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div className="animate-fade-in">
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input placeholder="Search items..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+        </div>
+        {isAdmin && (
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button><Plus className="mr-1 h-4 w-4" /> Add Item</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>Add New Item</DialogTitle></DialogHeader>
+              <div className="grid gap-3">
+                <div><Label>Asset Tag *</Label><Input value={form.asset_tag} onChange={(e) => setForm({ ...form, asset_tag: e.target.value })} /></div>
+                <div><Label>Name *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+                <div><Label>Category</Label><Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} /></div>
+                <div><Label>Description</Label><Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+                <div><Label>Condition</Label><Input value={form.condition} onChange={(e) => setForm({ ...form, condition: e.target.value })} /></div>
+                <div><Label>Location</Label><Input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} /></div>
+                <div><Label>Loan Duration (days)</Label><Input type="number" value={form.default_loan_duration} onChange={(e) => setForm({ ...form, default_loan_duration: e.target.value })} /></div>
+                <Button onClick={handleSave} disabled={saving}>
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Add Item"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+      ) : (
+        <div className="rounded-xl border bg-card overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="border-b bg-muted/50">
+              <tr>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Asset Tag</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Name</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">Category</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">Location</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((item) => (
+                <tr key={item.id} className="border-b last:border-0 hover:bg-muted/30">
+                  <td className="px-4 py-3 font-mono text-xs">{item.asset_tag}</td>
+                  <td className="px-4 py-3 font-medium">{item.name}</td>
+                  <td className="px-4 py-3 hidden md:table-cell text-muted-foreground">{item.category}</td>
+                  <td className="px-4 py-3 hidden md:table-cell text-muted-foreground">{item.location || "—"}</td>
+                  <td className="px-4 py-3">
+                    <span className={`rounded-full px-2 py-1 text-xs font-medium ${STATUS_STYLES[item.status] || ""}`}>
+                      {item.status.replace("_", " ")}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <Select value={item.status} onValueChange={(v) => updateStatus(item.id, v)}>
+                      <SelectTrigger className="h-8 w-32"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="available">Available</SelectItem>
+                        <SelectItem value="maintenance">Maintenance</SelectItem>
+                        <SelectItem value="lost">Lost</SelectItem>
+                        <SelectItem value="retired">Retired</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
