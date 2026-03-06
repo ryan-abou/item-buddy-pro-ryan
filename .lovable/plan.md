@@ -1,53 +1,47 @@
 
 
-# Plan: Expand Documentation Page with Code Explanations
+## Fix Plan: Staff Login Cleanup, Physical Keyboard Support, and Checkout Dialog Keyboard
 
-## What the user wants
-1. More detailed documentation that explains the actual code — how each file works, what each section does, so non-technical departments can understand
-2. Export the documentation as a single downloadable file (user said "one javascript file" but likely means a downloadable document — we'll provide a .html file export since we can't generate .docx natively in the browser without a library)
+### Issue 1: Clear Staff Login fields when leaving the page
+When navigating away from the Staff Login page, the email and password fields retain their values. Fix: reset state when the component unmounts or when the user clicks "Back."
 
-## Changes
+**File: `src/pages/StaffLogin.tsx`**
+- Clear `email` and `password` state in the "Back" button handler (already calls `detachInput()` and `navigate("/")`, just add `setEmail("")` and `setPassword("")` before navigating)
+- Add a `useEffect` cleanup that resets fields on unmount
 
-### 1. Expand `src/pages/Documentation.tsx` content
+### Issue 2: Allow physical keyboard input alongside virtual keyboard
+Currently, all inputs have `readOnly` and `inputMode="none"`, which completely blocks the built-in computer keyboard. Fix: remove `readOnly` from all input fields across the app so physical keyboard typing works normally alongside the virtual keyboard.
 
-Add new sections to the existing documentation page:
+**Files to update:**
+- `src/pages/StaffLogin.tsx` -- remove `inputMode="none"` from email and password inputs
+- `src/pages/Checkout.tsx` -- remove `readOnly` and `inputMode="none"` from duration, reason, teacher, and search inputs
+- `src/components/StudentIdEntry.tsx` -- remove `readOnly` and `inputMode="none"` from student ID, first name, and last name inputs
 
-**Code Architecture Overview** — explain the folder structure:
-- `src/pages/` — each screen in the app (Index, Checkout, Return, StaffLogin, admin/)
-- `src/components/` — reusable UI pieces (VirtualKeyboard, StudentIdEntry, NavLink)
-- `src/contexts/` — shared state (StudentContext for student sessions, AuthContext for staff login, KioskKeyboardContext for virtual keyboard)
-- `src/lib/` — helper functions that talk to the backend
-- `supabase/functions/` — backend functions that run on the server
+**Context sync fix in `src/contexts/KioskKeyboardContext.tsx`:**
+- Since physical typing now updates the React state directly via `onChange`, the keyboard context's `valueRef` can get out of sync. Update `attachInput` to always re-sync `valueRef` when called, and update `handleKeyPress`/`handleBackspace` to read from the input element's actual value rather than relying solely on `valueRef`.
 
-**How Each Page Works** — plain-English explanation:
-- **Home (Index.tsx)**: Shows three buttons, checks if a student is already identified, handles dark/light mode toggle
-- **Checkout (Checkout.tsx)**: Two-phase flow — first identify student, then show available items with search/filter, then confirmation dialog
-- **Return (Return.tsx)**: Identify student, show their active loans, return button per item
-- **Staff Login (StaffLogin.tsx)**: Email/password form, authenticates via backend, redirects to admin
-- **Admin Dashboard**: Tab-based layout with Inventory, Students, Loans, Staff, Settings
+### Issue 3: Virtual keyboard not working in the checkout confirmation dialog
+The Radix Dialog component uses a focus trap -- when the user taps a virtual keyboard button (which lives outside the dialog portal), the dialog's focus management interferes and steals focus back, preventing the keyboard from functioning.
 
-**How the Backend Functions Work** — explain each edge function in simple terms:
-- `student-lookup`: Receives a student ID number, searches the database, returns the student record or null
-- `student-register`: Creates a new student record with first/last name
-- `student-checkout`: Validates the request, checks rate limits, verifies item availability and student limits, creates a loan record, updates item status, logs the action
-- `student-return`: Marks a loan as returned, sets the item back to available
-- `student-loans`: Fetches all or active-only loans for a student
-- `create-staff`: Creates a new staff login account (admin only)
+**File: `src/pages/Checkout.tsx`**
+- Add `onOpenAutoFocus={(e) => e.preventDefault()}` to `DialogContent` to prevent auto-focus stealing
+- Add `onInteractOutside={(e) => e.preventDefault()}` to `DialogContent` to prevent the dialog from closing when clicking the virtual keyboard (which is outside the dialog)
 
-**How Security Works in the Code** — explain the service key pattern, RLS, and rate limiting in plain terms
+**File: `src/contexts/KioskKeyboardContext.tsx`**
+- Add `onPointerDown` with `e.preventDefault()` on the VirtualKeyboard wrapper to prevent it from stealing focus from the active input field
+- This ensures the keyboard buttons fire their click handlers without triggering the dialog's "outside click" detection
 
-### 2. Add "Download as HTML" button
+**File: `src/components/VirtualKeyboard.tsx`**
+- Accept an optional `onPointerDown` prop and apply it to the root container div
+- This prevents focus shift when tapping keyboard keys
 
-Add a button next to the existing "Print / Save as PDF" button that:
-- Collects the `<article>` element's innerHTML
-- Wraps it in a complete HTML document with inline styles
-- Creates a Blob and triggers a download as `IT-Equipment-Checkout-Documentation.html`
-- This HTML file can be opened in Word, Google Docs, or any browser
+### Technical Summary
 
-This is simpler and more reliable than trying to generate a .docx file (which would require a heavy library). The HTML file opens directly in Microsoft Word and preserves formatting.
-
-### Files to edit
-| File | Change |
-|------|--------|
-| `src/pages/Documentation.tsx` | Add expanded code explanation sections + download button |
+| File | Changes |
+|------|---------|
+| `src/pages/StaffLogin.tsx` | Clear email/password on unmount and on Back; remove `inputMode="none"` |
+| `src/pages/Checkout.tsx` | Remove `readOnly`/`inputMode="none"` from dialog inputs; add dialog focus trap overrides |
+| `src/components/StudentIdEntry.tsx` | Remove `readOnly`/`inputMode="none"` from all inputs |
+| `src/contexts/KioskKeyboardContext.tsx` | Add `onPointerDown` preventDefault to keyboard wrapper; sync `valueRef` with actual input value |
+| `src/components/VirtualKeyboard.tsx` | Accept and apply `onPointerDown` prop to root div |
 
