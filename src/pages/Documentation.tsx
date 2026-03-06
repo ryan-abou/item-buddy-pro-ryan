@@ -1,25 +1,14 @@
-import { ArrowLeft, Printer } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import DocHeader from "./docs/DocHeader";
+import DocCodeArchitecture from "./docs/DocCodeArchitecture";
+import DocPageExplanations from "./docs/DocPageExplanations";
+import DocBackendFunctions from "./docs/DocBackendFunctions";
+import DocSecurityDetail from "./docs/DocSecurityDetail";
+import DocContextsAndHooks from "./docs/DocContextsAndHooks";
 
 export default function Documentation() {
-  const navigate = useNavigate();
-
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Header - hidden when printing */}
-      <header className="border-b bg-card px-6 py-4 print:hidden">
-        <div className="mx-auto flex max-w-4xl items-center justify-between">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
-            <ArrowLeft className="mr-1 h-4 w-4" />
-            Back
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => window.print()}>
-            <Printer className="mr-1 h-4 w-4" />
-            Print / Save as PDF
-          </Button>
-        </div>
-      </header>
+      <DocHeader />
 
       <main className="mx-auto max-w-4xl px-6 py-10 print:px-0 print:py-0">
         <article className="prose prose-neutral dark:prose-invert max-w-none print:prose-sm">
@@ -32,6 +21,7 @@ export default function Documentation() {
 
           <hr />
 
+          {/* ── Overview ── */}
           <h2>What Is This Application?</h2>
           <p>
             This is a <strong>self-service IT equipment checkout kiosk</strong> built as a web app. It runs in a browser
@@ -42,38 +32,24 @@ export default function Documentation() {
 
           <hr />
 
+          {/* ── Who Uses It ── */}
           <h2>Who Uses It?</h2>
           <div className="overflow-x-auto">
             <table>
               <thead>
-                <tr>
-                  <th>Role</th>
-                  <th>How They Access It</th>
-                  <th>What They Can Do</th>
-                </tr>
+                <tr><th>Role</th><th>How They Access It</th><th>What They Can Do</th></tr>
               </thead>
               <tbody>
-                <tr>
-                  <td><strong>Students</strong></td>
-                  <td>Walk up to the kiosk, enter their Student ID</td>
-                  <td>Check out equipment, return equipment</td>
-                </tr>
-                <tr>
-                  <td><strong>Staff</strong></td>
-                  <td>Log in with email/password via "Staff Login"</td>
-                  <td>View inventory, students, and loans</td>
-                </tr>
-                <tr>
-                  <td><strong>Admins</strong></td>
-                  <td>Log in the same way (have admin role)</td>
-                  <td>Everything staff can do, plus: add/remove items, manage students, manage staff accounts, change settings</td>
-                </tr>
+                <tr><td><strong>Students</strong></td><td>Walk up to the kiosk, enter their Student ID</td><td>Check out equipment, return equipment</td></tr>
+                <tr><td><strong>Staff</strong></td><td>Log in with email/password via "Staff Login"</td><td>View inventory, students, and loans</td></tr>
+                <tr><td><strong>Admins</strong></td><td>Log in the same way (have admin role)</td><td>Everything staff can do, plus: add/remove items, manage students, manage staff accounts, change settings</td></tr>
               </tbody>
             </table>
           </div>
 
           <hr />
 
+          {/* ── Student Experience ── */}
           <h2>The Student Experience (Kiosk Mode)</h2>
 
           <h3>Home Screen</h3>
@@ -121,6 +97,7 @@ export default function Documentation() {
 
           <hr />
 
+          {/* ── Staff/Admin Experience ── */}
           <h2>The Staff/Admin Experience</h2>
 
           <h3>Logging In</h3>
@@ -172,15 +149,31 @@ export default function Documentation() {
 
           <hr />
 
+          {/* ── NEW: Code Architecture ── */}
+          <DocCodeArchitecture />
+
+          <hr />
+
+          {/* ── NEW: Page Explanations ── */}
+          <DocPageExplanations />
+
+          <hr />
+
+          {/* ── NEW: Backend Functions ── */}
+          <DocBackendFunctions />
+
+          <hr />
+
+          {/* ── NEW: Contexts & Hooks ── */}
+          <DocContextsAndHooks />
+
+          <hr />
+
+          {/* ── Database Structure ── */}
           <h2>Database Structure</h2>
           <div className="overflow-x-auto">
             <table>
-              <thead>
-                <tr>
-                  <th>Table</th>
-                  <th>Purpose</th>
-                </tr>
-              </thead>
+              <thead><tr><th>Table</th><th>Purpose</th></tr></thead>
               <tbody>
                 <tr><td><strong>students</strong></td><td>Student records (student_id, name, email, grade, max_items, active flag)</td></tr>
                 <tr><td><strong>items</strong></td><td>Equipment inventory (asset_tag, name, category, status, condition, location, default loan duration)</td></tr>
@@ -212,18 +205,12 @@ export default function Documentation() {
 
           <hr />
 
-          <h2>Security Model</h2>
-          <ul>
-            <li><strong>Students do not have login accounts.</strong> They identify by Student ID only. They cannot access the admin dashboard or see other students' data.</li>
-            <li><strong>All student-facing operations</strong> (lookup, register, checkout, return, view loans) go through secure backend functions that use a privileged service key. Students never directly query the database.</li>
-            <li><strong>Staff/Admin operations</strong> require email/password authentication. The system checks roles server-side.</li>
-            <li><strong>Row-Level Security (RLS)</strong> is enabled on every table, ensuring even if someone bypasses the UI, the database itself enforces access rules.</li>
-            <li><strong>Rate limiting</strong>: Checkout is limited to 5 attempts per student per hour to prevent abuse.</li>
-            <li><strong>Input validation</strong>: All backend functions validate formats (UUID, date, string lengths) before processing.</li>
-          </ul>
+          {/* ── NEW: Security Detail ── */}
+          <DocSecurityDetail />
 
           <hr />
 
+          {/* ── Virtual Keyboard ── */}
           <h2>Virtual Keyboard</h2>
           <p>The app includes a built-in on-screen keyboard for touchscreen kiosks. It supports:</p>
           <ul>
@@ -235,15 +222,11 @@ export default function Documentation() {
 
           <hr />
 
+          {/* ── Technical Stack ── */}
           <h2>Technical Stack (for IT Departments)</h2>
           <div className="overflow-x-auto">
             <table>
-              <thead>
-                <tr>
-                  <th>Component</th>
-                  <th>Technology</th>
-                </tr>
-              </thead>
+              <thead><tr><th>Component</th><th>Technology</th></tr></thead>
               <tbody>
                 <tr><td>Frontend</td><td>React + TypeScript + Vite</td></tr>
                 <tr><td>Styling</td><td>Tailwind CSS + shadcn/ui components</td></tr>
@@ -257,6 +240,7 @@ export default function Documentation() {
 
           <hr />
 
+          {/* ── Deployment ── */}
           <h2>How to Deploy on a Raspberry Pi Kiosk</h2>
           <ol>
             <li>Open the published URL (e.g., <code>https://item-buddy-pro.lovable.app</code>) in a full-screen browser (Chromium kiosk mode)</li>
@@ -267,6 +251,7 @@ export default function Documentation() {
 
           <hr />
 
+          {/* ── First-Time Setup ── */}
           <h2>First-Time Setup</h2>
           <ol>
             <li>Navigate to the app URL</li>
