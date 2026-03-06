@@ -74,9 +74,6 @@ const Index = () => {
         </button>
       </div>
 
-      <p className="mt-12 text-sm text-muted-foreground">
-        Need help? Contact your school IT department.
-      </p>
     </div>
   );
 };
