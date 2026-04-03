@@ -1,6 +1,6 @@
 # Item Buddy Pro
 
-School IT Equipment Checkout System — a kiosk-friendly web app for managing equipment loans to students.
+School IT Equipment Checkout System, a kiosk-friendly web app for managing equipment loans to students.
 
 **No backend, no login, no accounts needed.** All data is stored in the browser's localStorage.
 
